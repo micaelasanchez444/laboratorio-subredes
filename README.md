@@ -42,6 +42,15 @@ Cargá la IP y la máscara de PC A y de PC B, y el gateway de PC A si tiene uno.
 2. PC A compara su red con la de PC B usando su propia máscara.
 3. Una animación muestra el recorrido: directo por el switch, hacia el gateway, o por qué no llegaría.
 
+## Mapa de subredes
+
+Elegí una red y dividila de una de estas formas:
+
+- **En N subredes:** subredes iguales. Si pedís 5, salen 8, porque cada bit prestado duplica la cantidad.
+- **Por hosts necesarios:** un solo número divide toda la red en subredes iguales de ese tamaño. Una lista como `100, 50, 20` arma un bloque a medida para cada pedido (VLSM) y marca lo que sobra como libre.
+
+Cada bloque tiene un área proporcional a sus direcciones. Pasá el mouse para ver su rango, o tocalo para elegirlo y ponerle un nombre. Los bloques se calculan reservando la dirección de red y la de broadcast, así que los pedidos de hosts usan como mínimo un /30.
+
 ## Archivos
 
 | Archivo | Para qué sirve |
@@ -52,6 +61,7 @@ Cargá la IP y la máscara de PC A y de PC B, y el gateway de PC A si tiene uno.
 | `js/ui.js` | Ayudas compartidas y el cambio de tema |
 | `js/calculadora.js` | La pantalla de la calculadora |
 | `js/paquete.js` | La simulación de ¿Llega el paquete? |
+| `js/mapa.js` | El plano de subredes |
 | `js/app.js` | La navegación y el arranque de la app |
 | `pruebas.html` y `pruebas.js` | Las pruebas de los cálculos |
 

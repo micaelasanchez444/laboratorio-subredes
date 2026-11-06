@@ -308,3 +308,156 @@ function analizarPaquete(a, b, gatewayOctetos) {
     explicacion: `${otraRed} Le entrega el paquete al router ${gateway} por el switch. Desde ahí llega a PC B si el router tiene una ruta hacia esa red.`,
   };
 }
+
+// ----- Mapa de subredes -----
+
+const MAXIMO_SUBREDES = 256;
+
+// Prefijo más largo cuyo bloque alcanza para esos hosts, reservando red y broadcast.
+// Por eso, el bloque más chico es /30: los /31 son para enlaces punto a punto.
+function prefijoParaHosts(hosts) {
+  let bitsHost = 2;
+  while (2 ** bitsHost - 2 < hosts) bitsHost++;
+  return 32 - bitsHost;
+}
+
+// Datos de un bloque del mapa. redNumero es la dirección de red como número de 32 bits.
+function crearBloque(redNumero, prefijo, extra = {}) {
+  return {
+    ...calcularSubred(numeroAOctetos(redNumero), prefijo),
+    redNumero,
+    tamano: 2 ** (32 - prefijo),
+    clave: `${octetosATexto(numeroAOctetos(redNumero))}/${prefijo}`,
+    libre: false,
+    ...extra,
+  };
+}
+
+function crearBloquesIguales(redBase, prefijoNuevo, cantidad) {
+  const tamano = 2 ** (32 - prefijoNuevo);
+  return Array.from({ length: cantidad }, (_, i) => crearBloque(redBase + i * tamano, prefijoNuevo));
+}
+
+// Divide la red en la menor potencia de 2 de subredes iguales que cubra lo pedido
+function dividirEnN(ipOctetos, prefijoBase, pedidas) {
+  if (!Number.isInteger(pedidas) || pedidas < 1) {
+    throw new ErrorEntrada("La cantidad de subredes tiene que ser un número entero mayor que 0.");
+  }
+  if (pedidas > MAXIMO_SUBREDES) {
+    throw new ErrorEntrada(`El mapa dibuja hasta ${MAXIMO_SUBREDES} subredes: pediste ${pedidas}.`);
+  }
+  let bitsPrestados = 0;
+  while (2 ** bitsPrestados < pedidas) bitsPrestados++;
+  const prefijoNuevo = prefijoBase + bitsPrestados;
+  if (prefijoNuevo > 32) {
+    throw new ErrorEntrada(
+      `Una red /${prefijoBase} no alcanza para ${pedidas} subredes: necesitaría ${bitsPrestados} bits prestados y solo tiene ${32 - prefijoBase} de host.`
+    );
+  }
+  const redBase = octetosANumero(calcularRed(ipOctetos, prefijoBase));
+  return {
+    bitsPrestados,
+    prefijoNuevo,
+    bloques: crearBloquesIguales(redBase, prefijoNuevo, 2 ** bitsPrestados),
+  };
+}
+
+// Divide la red en todas las subredes iguales del menor tamaño que alcance para esos hosts
+function dividirPorHosts(ipOctetos, prefijoBase, hosts) {
+  if (!Number.isInteger(hosts) || hosts < 1) {
+    throw new ErrorEntrada("La cantidad de hosts tiene que ser un número entero mayor que 0.");
+  }
+  const prefijoNuevo = prefijoParaHosts(hosts);
+  if (prefijoNuevo < prefijoBase) {
+    throw new ErrorEntrada(
+      `Una red /${prefijoBase} no alcanza para ${hosts.toLocaleString("es-AR")} hosts en una sola subred.`
+    );
+  }
+  const bitsPrestados = prefijoNuevo - prefijoBase;
+  const cantidad = 2 ** bitsPrestados;
+  if (cantidad > MAXIMO_SUBREDES) {
+    throw new ErrorEntrada(
+      `Saldrían ${cantidad.toLocaleString("es-AR")} subredes y el mapa dibuja hasta ${MAXIMO_SUBREDES}. Probá con más hosts o una red más chica.`
+    );
+  }
+  const redBase = octetosANumero(calcularRed(ipOctetos, prefijoBase));
+  return { bitsPrestados, prefijoNuevo, bloques: crearBloquesIguales(redBase, prefijoNuevo, cantidad) };
+}
+
+// VLSM: asigna un bloque a medida por cada pedido, de mayor a menor, y marca lo que sobra como libre.
+// Al ir de mayor a menor, cada bloque queda alineado a su tamaño sin dejar huecos.
+function asignarVLSM(ipOctetos, prefijoBase, listaHosts) {
+  const redBase = octetosANumero(calcularRed(ipOctetos, prefijoBase));
+  const fin = redBase + 2 ** (32 - prefijoBase);
+  const pedidos = listaHosts
+    .map((hosts, indicePedido) => ({ hosts, indicePedido }))
+    .sort((x, y) => y.hosts - x.hosts);
+
+  const bloques = [];
+  let cursor = redBase;
+  for (const { hosts, indicePedido } of pedidos) {
+    const prefijo = prefijoParaHosts(hosts);
+    const tamano = 2 ** (32 - prefijo);
+    if (prefijo < prefijoBase || cursor + tamano > fin) {
+      throw new ErrorEntrada(
+        `Esos pedidos no entran en una red /${prefijoBase}: no queda lugar para ${hosts.toLocaleString("es-AR")} hosts.`
+      );
+    }
+    bloques.push(crearBloque(cursor, prefijo, { pedidos: hosts, indicePedido }));
+    cursor += tamano;
+  }
+
+  // Lo que sobra se parte en los bloques alineados más grandes posibles
+  while (cursor < fin) {
+    let prefijo = prefijoBase;
+    while (cursor % 2 ** (32 - prefijo) !== 0 || cursor + 2 ** (32 - prefijo) > fin) prefijo++;
+    bloques.push(crearBloque(cursor, prefijo, { libre: true }));
+    cursor += 2 ** (32 - prefijo);
+  }
+  return { bloques };
+}
+
+// Lee "100, 50 20" como [100, 50, 20]
+function leerListaHosts(texto) {
+  const partes = texto.split(/[,;\s]+/).filter((parte) => parte !== "");
+  if (partes.length === 0) {
+    throw new ErrorEntrada("Escribí una cantidad de hosts o una lista, como 100, 50, 20.");
+  }
+  if (partes.length > MAXIMO_SUBREDES) {
+    throw new ErrorEntrada(`El mapa dibuja hasta ${MAXIMO_SUBREDES} subredes: pediste ${partes.length}.`);
+  }
+  return partes.map((parte) => {
+    if (!/^\d+$/.test(parte) || Number(parte) < 1) {
+      throw new ErrorEntrada(`"${parte}" no es una cantidad válida: tiene que ser un número entero mayor que 0.`);
+    }
+    return Number(parte);
+  });
+}
+
+// Ubica cada bloque en un plano de 1 x 1, partiendo el espacio a la mitad como se parte una red:
+// cada bit más de prefijo es un corte más. El área de cada bloque es proporcional a sus direcciones.
+function calcularPlano(bloques, prefijoBase) {
+  const porClave = new Map(bloques.map((bloque) => [`${bloque.redNumero}/${bloque.prefijo}`, bloque]));
+  const ubicados = [];
+
+  function ubicar(inicio, prefijo, x, y, ancho, alto, cortarAncho) {
+    const bloque = porClave.get(`${inicio}/${prefijo}`);
+    if (bloque) {
+      ubicados.push({ bloque, x, y, ancho, alto });
+      return;
+    }
+    if (prefijo >= 32) throw new Error("Los bloques no cubren toda la red");
+    const mitad = 2 ** (31 - prefijo);
+    if (cortarAncho) {
+      ubicar(inicio, prefijo + 1, x, y, ancho / 2, alto, false);
+      ubicar(inicio + mitad, prefijo + 1, x + ancho / 2, y, ancho / 2, alto, false);
+    } else {
+      ubicar(inicio, prefijo + 1, x, y, ancho, alto / 2, true);
+      ubicar(inicio + mitad, prefijo + 1, x, y + alto / 2, ancho, alto / 2, true);
+    }
+  }
+
+  const redBase = Math.min(...bloques.map((bloque) => bloque.redNumero));
+  ubicar(redBase, prefijoBase, 0, 0, 1, 1, true);
+  return ubicados;
+}

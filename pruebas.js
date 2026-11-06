@@ -179,6 +179,94 @@ probar("paquete: red de B según su máscara y según la de A", () => {
   esperarIgual(analisis.redBSegunA, "192.168.0.0");
 });
 
+// ----- Mapa de subredes -----
+const casosPrefijoHosts = [[1, 30], [2, 30], [3, 29], [6, 29], [7, 28], [62, 26], [63, 25], [254, 24], [255, 23]];
+for (const [hosts, prefijo] of casosPrefijoHosts) {
+  probar(`${hosts} hosts necesitan /${prefijo}`, () => esperarIgual(prefijoParaHosts(hosts), prefijo));
+}
+
+probar("dividir /24 en 4 subredes", () => {
+  const { bitsPrestados, prefijoNuevo, bloques } = dividirEnN([192, 168, 1, 77], 24, 4);
+  esperarIgual(bitsPrestados, 2);
+  esperarIgual(prefijoNuevo, 26);
+  esperarIgual(bloques.map((b) => b.clave).join(" "), "192.168.1.0/26 192.168.1.64/26 192.168.1.128/26 192.168.1.192/26");
+  esperarIgual(bloques[3].broadcast, "192.168.1.255");
+  esperarIgual(bloques[0].hosts, 62);
+});
+probar("pedir 5 subredes da 8", () => esperarIgual(dividirEnN([10, 0, 0, 0], 24, 5).bloques.length, 8));
+probar("pedir 1 subred da la red entera", () => esperarIgual(dividirEnN([10, 0, 0, 9], 24, 1).bloques[0].clave, "10.0.0.0/24"));
+probar("/24 se divide hasta en 256 /32", () => {
+  const { bloques } = dividirEnN([10, 0, 0, 0], 24, 256);
+  esperarIgual(bloques.length, 256);
+  esperarIgual(bloques[255].clave, "10.0.0.255/32");
+});
+probar("/0 en 2 subredes", () => {
+  const { bloques } = dividirEnN([0, 0, 0, 0], 0, 2);
+  esperarIgual(bloques[1].clave, "128.0.0.0/1");
+});
+
+function esperarErrorDe(funcion, textoEsperado) {
+  try {
+    funcion();
+  } catch (problema) {
+    if (!(problema instanceof ErrorEntrada)) throw problema;
+    if (!problema.message.includes(textoEsperado)) {
+      throw new Error(`mensaje inesperado: ${problema.message}`);
+    }
+    return;
+  }
+  throw new Error("se esperaba un error de entrada");
+}
+
+probar("rechaza 3 subredes en un /31", () => esperarErrorDe(() => dividirEnN([10, 0, 0, 0], 31, 3), "no alcanza"));
+probar("rechaza más de 256 subredes", () => esperarErrorDe(() => dividirEnN([10, 0, 0, 0], 8, 257), "hasta 256"));
+probar("rechaza 0 subredes", () => esperarErrorDe(() => dividirEnN([10, 0, 0, 0], 24, 0), "mayor que 0"));
+
+probar("/24 por 30 hosts da 8 /27", () => {
+  const { prefijoNuevo, bloques } = dividirPorHosts([192, 168, 1, 0], 24, 30);
+  esperarIgual(prefijoNuevo, 27);
+  esperarIgual(bloques.length, 8);
+});
+probar("rechaza más hosts de los que entran", () => esperarErrorDe(() => dividirPorHosts([192, 168, 1, 0], 24, 300), "no alcanza"));
+probar("rechaza un mapa de demasiadas subredes", () => esperarErrorDe(() => dividirPorHosts([10, 0, 0, 0], 8, 100), "Saldrían"));
+
+probar("VLSM de 100, 50 y 20 en un /24", () => {
+  const { bloques } = asignarVLSM([192, 168, 10, 0], 24, [100, 50, 20]);
+  esperarIgual(
+    bloques.map((b) => `${b.clave}${b.libre ? "L" : ""}`).join(" "),
+    "192.168.10.0/25 192.168.10.128/26 192.168.10.192/27 192.168.10.224/27L"
+  );
+  esperarIgual(bloques[1].pedidos, 50);
+  esperarIgual(bloques[0].indicePedido, 0);
+});
+probar("VLSM ordena de mayor a menor", () => {
+  const { bloques } = asignarVLSM([192, 168, 10, 0], 24, [20, 100]);
+  esperarIgual(bloques[0].pedidos, 100);
+  esperarIgual(bloques[0].indicePedido, 1);
+});
+probar("VLSM rechaza lo que no entra", () => esperarErrorDe(() => asignarVLSM([192, 168, 10, 0], 24, [200, 100]), "no entran"));
+
+probar("lee listas de hosts", () => esperarIgual(leerListaHosts("100, 50 20;5").join(), "100,50,20,5"));
+probar("rechaza hosts inválidos", () => esperarErrorDe(() => leerListaHosts("10, abc"), "abc"));
+probar("rechaza lista vacía", () => esperarErrorDe(() => leerListaHosts("  "), "Escribí"));
+
+const areaTotal = (ubicados) => ubicados.reduce((suma, u) => suma + u.ancho * u.alto, 0);
+const casosPlano = [
+  ["iguales", dividirEnN([192, 168, 1, 0], 24, 8).bloques, 24],
+  ["VLSM", asignarVLSM([192, 168, 10, 0], 24, [100, 50, 20]).bloques, 24],
+  ["una sola", dividirEnN([10, 0, 0, 0], 8, 1).bloques, 8],
+];
+for (const [nombre, bloques, prefijo] of casosPlano) {
+  probar(`el plano cubre todo y es proporcional (${nombre})`, () => {
+    const ubicados = calcularPlano(bloques, prefijo);
+    esperarIgual(ubicados.length, bloques.length);
+    esperarIgual(areaTotal(ubicados), 1);
+    for (const u of ubicados) {
+      esperarIgual(u.ancho * u.alto, u.bloque.tamano / 2 ** (32 - prefijo));
+    }
+  });
+}
+
 // ----- Mostrar el resumen -----
 const fallas = resultadosPruebas.filter((resultado) => !resultado.ok);
 const resumen = `${resultadosPruebas.length - fallas.length} de ${resultadosPruebas.length} pruebas correctas`;

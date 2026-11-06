@@ -39,4 +39,5 @@ document.addEventListener("DOMContentLoaded", () => {
   iniciarNavegacion();
   iniciarCalculadora();
   iniciarPaquete();
+  iniciarMapa();
 });

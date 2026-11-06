@@ -13,6 +13,7 @@
   <script src="js/motor.js"></script>
   <script src="js/calculadora.js"></script>
   <script src="js/paquete.js"></script>
+  <script src="js/mapa.js"></script>
   <script src="js/app.js"></script>
 </head>
 <body>
@@ -30,6 +31,7 @@
     <ul>
       <li><a href="#calculadora">Calculadora</a></li>
       <li><a href="#paquete">¿Llega el paquete?</a></li>
+      <li><a href="#mapa">Mapa de subredes</a></li>
     </ul>
   </nav>
 
@@ -143,6 +145,79 @@
           <button id="paq-anterior" type="button">← Paso anterior</button>
           <button id="paq-siguiente" class="boton-principal" type="button">Paso siguiente →</button>
         </div>
+      </div>
+    </section>
+
+    <!-- ===== Mapa de subredes ===== -->
+    <section id="mapa" class="vista" aria-labelledby="titulo-mapa" hidden>
+      <h2 id="titulo-mapa" class="titulo-vista" tabindex="-1">Mapa de subredes</h2>
+
+      <div class="panel">
+        <form id="mapa-formulario" novalidate>
+          <div class="campos-paquete">
+            <div class="campo">
+              <label for="mapa-red">Red a dividir</label>
+              <input id="mapa-red" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+            </div>
+            <fieldset class="campo opciones-division">
+              <legend>Dividir</legend>
+              <label><input type="radio" name="mapa-modo" value="subredes"> En N subredes</label>
+              <label><input type="radio" name="mapa-modo" value="hosts"> Por hosts necesarios</label>
+            </fieldset>
+            <div class="campo">
+              <label id="mapa-etiqueta-valor" for="mapa-valor"></label>
+              <input id="mapa-valor" type="text" inputmode="text" autocomplete="off" aria-describedby="mapa-ayuda-valor">
+            </div>
+          </div>
+          <p id="mapa-ayuda-valor" class="ayuda"></p>
+          <button class="boton-principal espacio-arriba" type="submit">Dibujar mapa</button>
+          <p id="mapa-error" class="error" role="alert" hidden></p>
+        </form>
+
+        <div class="ejemplos">
+          <span id="mapa-etiqueta-ejemplos">Ejemplos:</span>
+          <ul id="mapa-ejemplos" aria-labelledby="mapa-etiqueta-ejemplos"></ul>
+        </div>
+      </div>
+
+      <div id="mapa-resultado">
+        <section class="panel" aria-labelledby="mapa-titulo-plano">
+          <h3 id="mapa-titulo-plano">Plano de la red</h3>
+          <p id="mapa-resumen" class="descripcion-paso" role="status"></p>
+          <p class="ayuda">El área de cada bloque es proporcional a sus direcciones. Pasá el mouse para ver el rango, o tocá un bloque para elegirlo.</p>
+          <div id="mapa-plano" class="plano"></div>
+          <div id="mapa-tooltip" class="plano-tooltip" hidden></div>
+
+          <div id="mapa-detalle" class="detalle-bloque"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="mapa-titulo-lista">
+          <h3 id="mapa-titulo-lista">Lista de subredes</h3>
+          <div class="tabla-scroll" tabindex="0" role="region" aria-labelledby="mapa-titulo-lista">
+            <table class="tabla-subredes">
+              <thead>
+                <tr>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">Subred</th>
+                  <th scope="col">Rango de hosts</th>
+                  <th scope="col">Broadcast</th>
+                  <th scope="col">Hosts</th>
+                </tr>
+              </thead>
+              <tbody id="mapa-filas"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="mapa-titulo-seguridad">
+          <h3 id="mapa-titulo-seguridad">¿Por qué segmentar mejora la seguridad?</h3>
+          <ul class="lista-puntos">
+            <li><strong>Frena el movimiento lateral:</strong> si comprometen un equipo de Invitados, no queda en la misma red que Servidores.</li>
+            <li><strong>Permite filtrar:</strong> el tráfico entre subredes pasa por un router o firewall, donde se puede bloquear y registrar.</li>
+            <li><strong>Achica la exposición local:</strong> ataques como la captura de tráfico o el envenenamiento ARP quedan limitados a cada segmento.</li>
+          </ul>
+          <p class="nota-mascaras">Dividir no alcanza por sí solo: si el router deja pasar todo, las subredes siguen comunicadas. Hacen falta reglas entre ellas.</p>
+        </section>
       </div>
     </section>
   </main>

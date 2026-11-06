@@ -16,6 +16,16 @@
   --host-fondo: #ffffff;
   --error: #a4161a;
   --error-fondo: #fdeaea;
+  --bloque-1: #bcd7f5;
+  --bloque-2: #f6cf9f;
+  --bloque-3: #bfe3c4;
+  --bloque-4: #e3c4ef;
+  --bloque-5: #f6bcbc;
+  --bloque-6: #b4e4e6;
+  --bloque-7: #ece49a;
+  --bloque-8: #c9cdf5;
+  --bloque-texto: #1b2129;
+  --bloque-libre: #d6d9d2;
 }
 
 /* Tema oscuro según el sistema, salvo que la persona haya elegido claro */
@@ -37,6 +47,16 @@
     --host-fondo: #1a2027;
     --error: #ffb4b4;
     --error-fondo: #431a1d;
+    --bloque-1: #28588a;
+    --bloque-2: #855316;
+    --bloque-3: #2a6b49;
+    --bloque-4: #754582;
+    --bloque-5: #8c3d45;
+    --bloque-6: #1f6a70;
+    --bloque-7: #66601a;
+    --bloque-8: #4d5596;
+    --bloque-texto: #ffffff;
+    --bloque-libre: #343d47;
   }
 }
 
@@ -58,6 +78,16 @@
   --host-fondo: #1a2027;
   --error: #ffb4b4;
   --error-fondo: #431a1d;
+  --bloque-1: #28588a;
+  --bloque-2: #855316;
+  --bloque-3: #2a6b49;
+  --bloque-4: #754582;
+  --bloque-5: #8c3d45;
+  --bloque-6: #1f6a70;
+  --bloque-7: #66601a;
+  --bloque-8: #4d5596;
+  --bloque-texto: #ffffff;
+  --bloque-libre: #343d47;
 }
 
 /* ===== Base ===== */
@@ -977,6 +1007,270 @@ button[aria-disabled="true"] {
 .advertencias li::before {
   content: "Ojo: ";
   font-weight: 700;
+}
+
+/* ===== Mapa de subredes ===== */
+.opciones-division {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.opciones-division legend {
+  margin-bottom: 0.4rem;
+  padding: 0;
+  font-weight: 650;
+}
+
+.opciones-division label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.5rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.opciones-division input {
+  width: 1.1rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  min-height: 0;
+  flex: none;
+  padding: 0;
+}
+
+.espacio-arriba {
+  margin-top: 0.8rem;
+}
+
+/* El plano tiene una proporción fija, así los cortes a la mitad son visibles */
+.plano {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  margin-top: 0.9rem;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  background: var(--superficie-suave);
+}
+
+button.bloque {
+  position: absolute;
+  min-height: 0;
+  padding: 0.2rem;
+  overflow: hidden;
+  border: 1px solid var(--superficie);
+  border-radius: 0;
+  color: var(--bloque-texto);
+  line-height: 1.2;
+  container-type: size;
+  animation: entrar-bloque 0.3s ease backwards;
+  transition: filter 0.15s ease;
+}
+
+button.bloque:hover {
+  filter: brightness(0.94);
+}
+
+button.bloque:focus-visible {
+  z-index: 2;
+  outline-offset: -3px;
+}
+
+button.bloque[aria-pressed="true"] {
+  z-index: 1;
+  box-shadow: inset 0 0 0 3px var(--texto);
+}
+
+@keyframes entrar-bloque {
+  from {
+    opacity: 0;
+  }
+}
+
+.bloque-color-0 { background: var(--bloque-1); }
+.bloque-color-1 { background: var(--bloque-2); }
+.bloque-color-2 { background: var(--bloque-3); }
+.bloque-color-3 { background: var(--bloque-4); }
+.bloque-color-4 { background: var(--bloque-5); }
+.bloque-color-5 { background: var(--bloque-6); }
+.bloque-color-6 { background: var(--bloque-7); }
+.bloque-color-7 { background: var(--bloque-8); }
+
+.bloque-libre {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--bloque-libre),
+    var(--bloque-libre) 6px,
+    var(--superficie-suave) 6px,
+    var(--superficie-suave) 12px
+  );
+}
+
+button.bloque.bloque-libre {
+  color: var(--texto);
+}
+
+.bloque-contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.bloque-nombre {
+  overflow: hidden;
+  max-width: 100%;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bloque-cidr,
+.bloque-prefijo {
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.bloque-prefijo {
+  display: none;
+}
+
+/* Según el lugar que tenga cada bloque, muestra más o menos texto */
+@container (max-width: 8.5rem) {
+  .bloque-cidr {
+    display: none;
+  }
+
+  .bloque-prefijo {
+    display: block;
+  }
+}
+
+@container (max-height: 2.8rem) {
+  .bloque-nombre {
+    display: none;
+  }
+}
+
+@container (max-width: 2.3rem) {
+  .bloque-prefijo,
+  .bloque-nombre {
+    display: none;
+  }
+}
+
+.plano-tooltip {
+  position: fixed;
+  z-index: 5;
+  max-width: 17rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.plano-tooltip strong {
+  display: block;
+}
+
+.detalle-bloque {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  background: var(--superficie-suave);
+  border-radius: 7px;
+}
+
+.detalle-bloque input {
+  width: 100%;
+  max-width: 22rem;
+}
+
+.datos-bloque {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.datos-bloque dt {
+  color: var(--texto-suave);
+  font-size: 0.88rem;
+}
+
+.datos-bloque dd {
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.tabla-scroll {
+  max-height: 24rem;
+  margin-top: 0.7rem;
+  overflow: auto;
+}
+
+.tabla-subredes {
+  width: 100%;
+  min-width: 36rem;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  text-align: left;
+}
+
+.tabla-subredes th {
+  position: sticky;
+  top: 0;
+  background: var(--superficie);
+}
+
+.tabla-subredes th,
+.tabla-subredes td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--borde-suave);
+}
+
+.tabla-subredes td:not(:first-child) {
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+}
+
+.tabla-subredes tr[data-activa="true"] td {
+  background: var(--superficie-suave);
+}
+
+button.boton-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2rem;
+  padding: 0.1rem 0.3rem;
+  border: 0;
+  background: none;
+  text-align: left;
+  text-decoration: underline;
+}
+
+.muestra-color {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 1px solid var(--borde);
+  border-radius: 2px;
+}
+
+.lista-puntos {
+  margin-top: 0.6rem;
+}
+
+.lista-puntos li + li {
+  margin-top: 0.4rem;
 }
 
 /* ===== Reducir movimiento: los cambios se ven al instante ===== */
