@@ -122,6 +122,63 @@ for (const [entrada, texto] of casosError) {
   probar(`rechaza "${entrada}"`, () => esperarError(entrada, texto));
 }
 
+// ----- ¿Llega el paquete? -----
+function analizar(a, b, gateway) {
+  return analizarPaquete(
+    interpretarEntrada(a),
+    interpretarEntrada(b),
+    gateway ? textoAOctetos(gateway, "El gateway") : null
+  );
+}
+
+probar("AND de 192.168.1.130/26", () => {
+  esperarIgual(octetosATexto(calcularRed([192, 168, 1, 130], 26)), "192.168.1.128");
+});
+probar("dirección de red reservada", () => esperarIgual(direccionReservada([192, 168, 1, 0], 24), "red"));
+probar("dirección de broadcast reservada", () => esperarIgual(direccionReservada([192, 168, 1, 255], 24), "broadcast"));
+probar("dirección de host no reservada", () => esperarIgual(direccionReservada([192, 168, 1, 1], 24), null));
+probar("/31 no tiene direcciones reservadas", () => esperarIgual(direccionReservada([10, 0, 0, 4], 31), null));
+
+const casosPaquete = [
+  { nombre: "misma red", a: "192.168.1.10/24", b: "192.168.1.20/24", gateway: "", resultado: "directo", llega: true },
+  { nombre: "misma red y gateway ajeno", a: "192.168.1.10/24", b: "192.168.1.20/24", gateway: "10.0.0.1", resultado: "directo", llega: true },
+  { nombre: "otra red con gateway", a: "192.168.1.10/24", b: "192.168.2.20/24", gateway: "192.168.1.1", resultado: "gateway", llega: true },
+  { nombre: "otra red sin gateway", a: "192.168.1.10/24", b: "192.168.2.20/24", gateway: "", resultado: "sin-gateway", llega: false },
+  { nombre: "gateway fuera de la red", a: "192.168.1.10/24", b: "192.168.2.20/24", gateway: "10.0.0.1", resultado: "gateway-fuera", llega: false },
+  { nombre: "gateway igual a PC A", a: "192.168.1.10/24", b: "192.168.2.20/24", gateway: "192.168.1.10", resultado: "gateway-invalido", llega: false },
+  { nombre: "gateway dirección de red", a: "192.168.1.10/24", b: "192.168.2.20/24", gateway: "192.168.1.0", resultado: "gateway-invalido", llega: false },
+  { nombre: "gateway dirección de broadcast", a: "192.168.1.10/24", b: "192.168.2.20/24", gateway: "192.168.1.255", resultado: "gateway-invalido", llega: false },
+  { nombre: "misma IP", a: "192.168.1.10/24", b: "192.168.1.10/24", gateway: "", resultado: "misma-ip", llega: false },
+  { nombre: "/26 separa redes con el mismo /24", a: "192.168.1.10/26", b: "192.168.1.100/26", gateway: "192.168.1.1", resultado: "gateway", llega: true },
+  { nombre: "A decide con su propia máscara", a: "192.168.1.10/16", b: "192.168.2.20/24", gateway: "", resultado: "directo", llega: true },
+  { nombre: "/31 en el mismo enlace", a: "10.0.0.4/31", b: "10.0.0.5/31", gateway: "", resultado: "directo", llega: true },
+  { nombre: "/32 no alcanza a nadie directo", a: "10.0.0.4/32", b: "10.0.0.5/32", gateway: "", resultado: "sin-gateway", llega: false },
+];
+for (const caso of casosPaquete) {
+  probar(`paquete: ${caso.nombre}`, () => {
+    const analisis = analizar(caso.a, caso.b, caso.gateway);
+    esperarIgual(analisis.resultado, caso.resultado);
+    esperarIgual(analisis.llega, caso.llega);
+  });
+}
+
+probar("paquete: máscaras distintas generan advertencia", () => {
+  const analisis = analizar("192.168.1.10/16", "192.168.2.20/24", "");
+  esperarIgual(analisis.advertencias.length, 1);
+});
+probar("paquete: máscaras iguales no generan advertencia", () => {
+  esperarIgual(analizar("192.168.1.10/24", "192.168.1.20/24", "").advertencias.length, 0);
+});
+probar("paquete: destino con dirección de broadcast genera advertencia", () => {
+  const analisis = analizar("192.168.1.10/24", "192.168.1.255/24", "");
+  esperarIgual(analisis.advertencias.length, 1);
+});
+probar("paquete: red de B según su máscara y según la de A", () => {
+  const analisis = analizar("192.168.1.10/16", "192.168.2.20/24", "");
+  esperarIgual(analisis.redB, "192.168.2.0");
+  esperarIgual(analisis.redBSegunA, "192.168.0.0");
+});
+
 // ----- Mostrar el resumen -----
 const fallas = resultadosPruebas.filter((resultado) => !resultado.ok);
 const resumen = `${resultadosPruebas.length - fallas.length} de ${resultadosPruebas.length} pruebas correctas`;

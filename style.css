@@ -594,6 +594,391 @@ input[aria-invalid="true"] {
   font-weight: 700;
 }
 
+/* ===== ¿Llega el paquete? ===== */
+.campos-paquete {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.campo input {
+  width: 100%;
+}
+
+.pasos-encabezado {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.7rem;
+}
+
+.contador-pasos {
+  flex: none;
+  color: var(--texto-suave);
+  font-size: 0.92rem;
+}
+
+.barra-pasos {
+  flex: 1;
+  height: 0.4rem;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--superficie-suave);
+}
+
+.barra-pasos span {
+  display: block;
+  height: 100%;
+  background: var(--acento);
+  transition: width 0.3s ease;
+}
+
+.descripcion-paso {
+  margin-top: 0.3rem;
+  color: var(--texto-suave);
+}
+
+.escena {
+  margin: 1rem 0;
+  min-height: 15rem;
+}
+
+.botones-pasos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+button[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- Operación AND --- */
+.operacion {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 46rem) {
+  .operacion {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.tabla-and {
+  display: grid;
+  grid-template-columns: minmax(4.6rem, auto) repeat(8, minmax(0, 1fr));
+  gap: 3px;
+  align-items: center;
+}
+
+.tabla-and-etiqueta {
+  padding-right: 0.3rem;
+  font-size: 0.92rem;
+}
+
+.tabla-and-etiqueta strong {
+  display: block;
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+}
+
+.celda-bit {
+  padding: 0.3rem 0;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  background: var(--superficie-suave);
+  color: var(--texto-suave);
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  font-weight: 700;
+  text-align: center;
+  transition: border-color 0.15s ease;
+}
+
+.celda-uno {
+  background: var(--red-fondo);
+  color: var(--red);
+}
+
+.celda-activa {
+  border-color: var(--acento);
+}
+
+.separador-and {
+  grid-column: 1 / -1;
+  height: 2px;
+  background: var(--texto-suave);
+}
+
+.celda-revelada {
+  animation: aparecer 0.25s ease;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(-0.4rem);
+  }
+}
+
+.red-parcial {
+  margin-top: 0.8rem;
+}
+
+.red-parcial .valor {
+  display: block;
+}
+
+.compuerta {
+  padding: 0.7rem;
+  background: var(--superficie-suave);
+  border-radius: 7px;
+}
+
+.compuerta svg {
+  display: block;
+  width: 100%;
+  max-width: 15rem;
+  margin: 0 auto;
+}
+
+.compuerta-linea {
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-width: 3;
+}
+
+.compuerta-linea-activa {
+  stroke: var(--acento);
+}
+
+.compuerta-cuerpo {
+  fill: var(--superficie);
+  stroke: var(--texto);
+  stroke-width: 3;
+}
+
+.compuerta-texto {
+  fill: var(--texto);
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.compuerta-operacion {
+  margin: 0.3rem 0 0.6rem;
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  font-weight: 700;
+  text-align: center;
+}
+
+.tabla-verdad {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  text-align: center;
+}
+
+.tabla-verdad caption {
+  margin-bottom: 0.3rem;
+  color: var(--texto-suave);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  font-size: 0.9rem;
+}
+
+.tabla-verdad th,
+.tabla-verdad td {
+  padding: 0.12rem;
+  border: 1px solid var(--borde-suave);
+}
+
+.tabla-verdad .fila-activa td {
+  background: var(--acento);
+  color: var(--acento-texto);
+  font-weight: 700;
+}
+
+/* --- Planteo y comparación --- */
+.equipos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.equipo {
+  padding: 0.8rem;
+  background: var(--superficie-suave);
+  border-radius: 7px;
+}
+
+.equipo-nombre {
+  color: var(--texto-suave);
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.comparacion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: center;
+}
+
+@media (max-width: 34rem) {
+  .comparacion {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: center;
+  }
+}
+
+.simbolo-comparacion {
+  color: var(--acento);
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  animation: resaltar 0.4s ease;
+}
+
+@keyframes resaltar {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+.nota-mascaras {
+  margin-top: 0.8rem;
+  color: var(--texto-suave);
+}
+
+/* --- Conclusión: el recorrido del paquete --- */
+.recorrido {
+  position: relative;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  margin: 1.8rem 0 1rem;
+}
+
+/* El cable pasa por el centro de los nodos */
+.recorrido-cable {
+  position: absolute;
+  top: 1.5rem;
+  height: 3px;
+  background: var(--borde);
+}
+
+.nodo {
+  position: relative;
+  padding: 0 0.15rem;
+  text-align: center;
+}
+
+.nodo-icono {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 0.35rem;
+  place-items: center;
+  border: 2px solid var(--borde);
+  border-radius: 9px;
+  background: var(--superficie);
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.nodo-apagado {
+  color: var(--texto-suave);
+}
+
+.nodo-apagado .nodo-icono {
+  border-style: dashed;
+}
+
+.nodo-llegada .nodo-icono {
+  border-color: var(--acento);
+  background: var(--red-fondo);
+  color: var(--red);
+}
+
+.nodo-nombre {
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.nodo-ip {
+  display: block;
+  color: var(--texto-suave);
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  font-size: 0.74rem;
+  overflow-wrap: anywhere;
+}
+
+.paquete-punto {
+  position: absolute;
+  top: 0.85rem;
+  z-index: 1;
+  width: 1.3rem;
+  height: 1.3rem;
+  margin-left: -0.65rem;
+  border: 2px solid var(--superficie);
+  border-radius: 4px;
+  background: var(--acento);
+}
+
+.paquete-punto-frenado {
+  display: grid;
+  place-items: center;
+  background: var(--error);
+  color: var(--superficie);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.veredicto {
+  padding: 0.8rem 1rem;
+  border-left: 4px solid var(--acento);
+  border-radius: 4px;
+  background: var(--superficie-suave);
+  animation: aparecer 0.3s ease;
+}
+
+.veredicto-falla {
+  border-left-color: var(--error);
+  background: var(--error-fondo);
+}
+
+.veredicto h4 {
+  font-size: 1.1rem;
+}
+
+.veredicto-falla h4 {
+  color: var(--error);
+}
+
+.advertencias {
+  margin-top: 0.6rem;
+  font-size: 0.95rem;
+}
+
+.advertencias li + li {
+  margin-top: 0.3rem;
+}
+
+.advertencias li::before {
+  content: "Ojo: ";
+  font-weight: 700;
+}
+
 /* ===== Reducir movimiento: los cambios se ven al instante ===== */
 @media (prefers-reduced-motion: reduce) {
   *,

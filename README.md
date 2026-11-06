@@ -34,6 +34,14 @@ La calculadora muestra:
 
 Dentro de la calculadora, mové el deslizador de /0 a /32. Los resultados se actualizan al instante y la frontera entre los bits de red y de host se corre con una animación.
 
+## ¿Llega el paquete?
+
+Cargá la IP y la máscara de PC A y de PC B, y el gateway de PC A si tiene uno. Con **Paso anterior** y **Paso siguiente** recorrés la simulación:
+
+1. La compuerta AND calcula la red de cada equipo, octeto por octeto y bit por bit.
+2. PC A compara su red con la de PC B usando su propia máscara.
+3. Una animación muestra el recorrido: directo por el switch, hacia el gateway, o por qué no llegaría.
+
 ## Archivos
 
 | Archivo | Para qué sirve |
@@ -43,6 +51,7 @@ Dentro de la calculadora, mové el deslizador de /0 a /32. Los resultados se act
 | `js/motor.js` | Las funciones de cálculo, sin código de pantalla |
 | `js/ui.js` | Ayudas compartidas y el cambio de tema |
 | `js/calculadora.js` | La pantalla de la calculadora |
+| `js/paquete.js` | La simulación de ¿Llega el paquete? |
 | `js/app.js` | La navegación y el arranque de la app |
 | `pruebas.html` y `pruebas.js` | Las pruebas de los cálculos |
 

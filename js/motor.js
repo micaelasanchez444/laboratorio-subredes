@@ -177,3 +177,134 @@ function calcularSubred(ipOctetos, prefijo) {
     tipo: tipoDeIP(ipOctetos),
   };
 }
+
+// Devuelve los octetos de la red: IP AND máscara, bit a bit
+function calcularRed(ipOctetos, prefijo) {
+  const mascara = numeroAOctetos(prefijoAMascara(prefijo));
+  return ipOctetos.map((octeto, i) => octeto & mascara[i]);
+}
+
+// Dice si la IP es la dirección de "red" o de "broadcast" de su subred; null si es de host.
+// En /31 y /32 no hay direcciones reservadas.
+function direccionReservada(ipOctetos, prefijo) {
+  if (prefijo >= 31) return null;
+  const s = calcularSubred(ipOctetos, prefijo);
+  if (s.ip === s.red) return "red";
+  if (s.ip === s.broadcast) return "broadcast";
+  return null;
+}
+
+function mismaRed(unaIP, otraIP, prefijo) {
+  return octetosATexto(calcularRed(unaIP, prefijo)) === octetosATexto(calcularRed(otraIP, prefijo));
+}
+
+// Decide qué hace PC A para mandarle un paquete a PC B. Quien envía compara usando SU máscara.
+// a y b son { ipOctetos, prefijo }; gatewayOctetos es el gateway de PC A, o null si no tiene.
+function analizarPaquete(a, b, gatewayOctetos) {
+  const ipA = octetosATexto(a.ipOctetos);
+  const ipB = octetosATexto(b.ipOctetos);
+  const redA = octetosATexto(calcularRed(a.ipOctetos, a.prefijo));
+  const redB = octetosATexto(calcularRed(b.ipOctetos, b.prefijo));
+  const redBSegunA = octetosATexto(calcularRed(b.ipOctetos, a.prefijo));
+  const directoSegunA = redA === redBSegunA;
+  const directoSegunB = mismaRed(a.ipOctetos, b.ipOctetos, b.prefijo);
+
+  const advertencias = [];
+  for (const [nombre, equipo] of [["PC A", a], ["PC B", b]]) {
+    const reservada = direccionReservada(equipo.ipOctetos, equipo.prefijo);
+    if (reservada) {
+      advertencias.push(
+        `La IP de ${nombre} es la dirección de ${reservada} de su subred: no se le puede asignar a un equipo.`
+      );
+    }
+  }
+  if (directoSegunA && !directoSegunB) {
+    advertencias.push(
+      `Con su máscara /${b.prefijo}, PC B cree que PC A está en otra red: la respuesta la mandaría a su gateway y podría no volver.`
+    );
+  }
+  if (!directoSegunA && directoSegunB) {
+    advertencias.push(
+      `Con su máscara /${b.prefijo}, PC B cree que PC A está en su misma red: las máscaras no coinciden, así que la respuesta iría por otro camino.`
+    );
+  }
+
+  const base = { ipA, ipB, redA, redB, redBSegunA, prefijoA: a.prefijo, directoSegunA, advertencias };
+
+  if (ipA === ipB) {
+    return {
+      ...base,
+      resultado: "misma-ip",
+      llega: false,
+      titulo: "Conflicto de IP",
+      explicacion: `PC A y PC B tienen la misma IP (${ipA}). Cada equipo de una red necesita una dirección propia.`,
+    };
+  }
+
+  if (directoSegunA) {
+    return {
+      ...base,
+      resultado: "directo",
+      llega: true,
+      titulo: "Misma red: va directo",
+      explicacion: `Para PC A, la IP ${ipB} está en su red ${redA}/${a.prefijo}. El paquete va directo por el switch, sin pasar por el router.`,
+    };
+  }
+
+  const otraRed = `Para PC A, la IP ${ipB} está fuera de su red ${redA}/${a.prefijo}, así que necesita a su gateway.`;
+
+  if (gatewayOctetos === null) {
+    return {
+      ...base,
+      resultado: "sin-gateway",
+      llega: false,
+      titulo: "No llegaría: falta el gateway",
+      explicacion: `${otraRed} Como no tiene ninguno configurado, no sabe a quién entregarle el paquete y lo descarta.`,
+    };
+  }
+
+  const gateway = octetosATexto(gatewayOctetos);
+
+  if (!mismaRed(gatewayOctetos, a.ipOctetos, a.prefijo)) {
+    return {
+      ...base,
+      gateway,
+      resultado: "gateway-fuera",
+      llega: false,
+      titulo: "No llegaría: gateway fuera de la red",
+      explicacion: `${otraRed} Pero el gateway ${gateway} también está fuera de esa red, y PC A solo le puede entregar tramas directamente a equipos de su propia red.`,
+    };
+  }
+
+  if (gateway === ipA) {
+    return {
+      ...base,
+      gateway,
+      resultado: "gateway-invalido",
+      llega: false,
+      titulo: "No llegaría: el gateway es PC A",
+      explicacion: `${otraRed} Pero tiene configurada su propia IP (${gateway}) como gateway, así que el paquete no sale hacia ningún router.`,
+    };
+  }
+
+  const gatewayReservado = direccionReservada(gatewayOctetos, a.prefijo);
+  if (gatewayReservado) {
+    return {
+      ...base,
+      gateway,
+      resultado: "gateway-invalido",
+      llega: false,
+      titulo: "No llegaría: gateway inválido",
+      explicacion: `${otraRed} Pero ${gateway} es la dirección de ${gatewayReservado} de esa red, no la de un router.`,
+    };
+  }
+
+  return {
+    ...base,
+    gateway,
+    resultado: "gateway",
+    llega: true,
+    titulo: "Otra red: va al gateway",
+    explicacion: `${otraRed} Le entrega el paquete al router ${gateway} por el switch. Desde ahí llega a PC B si el router tiene una ruta hacia esa red.`,
+  };
+}

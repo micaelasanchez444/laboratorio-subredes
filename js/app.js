@@ -38,4 +38,5 @@ document.addEventListener("DOMContentLoaded", () => {
   iniciarTema();
   iniciarNavegacion();
   iniciarCalculadora();
+  iniciarPaquete();
 });
