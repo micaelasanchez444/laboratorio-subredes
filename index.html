@@ -75,6 +75,20 @@
             </ul>
           </div>
           <p id="calc-resumen-bits" class="resumen-bits"></p>
+
+          <div class="mascara-vivo">
+            <label for="calc-deslizador">Máscara en vivo: <output id="calc-prefijo" for="calc-deslizador"></output></label>
+            <div class="regla-contenedor">
+              <div id="calc-regla" class="regla" aria-hidden="true">
+                <span id="calc-frontera" class="frontera"></span>
+              </div>
+              <input id="calc-deslizador" class="deslizador" type="range" min="0" max="32" step="1">
+              <div class="regla-marcas" aria-hidden="true">
+                <span>/0</span><span>/8</span><span>/16</span><span>/24</span><span>/32</span>
+              </div>
+            </div>
+          </div>
+
           <div id="calc-binario"></div>
         </section>
 

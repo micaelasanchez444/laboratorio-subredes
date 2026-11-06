@@ -30,6 +30,10 @@ La calculadora muestra:
 | /31 (enlace punto a punto, RFC 3021) | 2 | No tiene |
 | /32 (una sola dirección) | 1 | No tiene |
 
+## Máscara en vivo
+
+Dentro de la calculadora, mové el deslizador de /0 a /32. Los resultados se actualizan al instante y la frontera entre los bits de red y de host se corre con una animación.
+
 ## Archivos
 
 | Archivo | Para qué sirve |

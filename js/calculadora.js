@@ -43,11 +43,17 @@ function actualizarFilaBinaria(fila, nombre, octetos, prefijo) {
     elementos.bits.forEach((bit, posicion) => {
       bit.textContent = binario[posicion];
       bit.className = posicion < bitsDeRed ? "bit bit-red" : "bit bit-host";
+      // El primer bit de host marca dónde está la frontera con la red
+      if (indice * 8 + posicion === prefijo) bit.classList.add("bit-frontera");
     });
     elementos.descripcion.textContent =
       `Octeto ${indice + 1}: ${octeto}, en binario ${binario}; ` +
       `${bitsDeRed} bits de red y ${8 - bitsDeRed} de host.`;
   });
+}
+
+function textoHosts(hosts) {
+  return hosts === 1 ? "1 host utilizable" : `${hosts.toLocaleString("es-AR")} hosts utilizables`;
 }
 
 // Arma los datos de las tarjetas, con los textos para estudiar
@@ -104,11 +110,40 @@ function iniciarCalculadora() {
   const filaMascara = crearFilaBinaria();
   document.getElementById("calc-binario").append(filaIP.raiz, filaMascara.raiz);
 
+  const deslizador = document.getElementById("calc-deslizador");
+  const salidaPrefijo = document.getElementById("calc-prefijo");
+  const frontera = document.getElementById("calc-frontera");
+  const regla = document.getElementById("calc-regla");
+
+  // La regla tiene un casillero por cada bit de la dirección
+  const casilleros = [];
+  for (let i = 0; i < 32; i++) {
+    const casillero = crearElemento("span", "casillero");
+    regla.insertBefore(casillero, frontera);
+    casilleros.push(casillero);
+  }
+
+  let ipActual = null; // la última IP válida, para recalcular al mover el deslizador
+
+  function actualizarDeslizador(s) {
+    deslizador.value = s.prefijo;
+    deslizador.setAttribute(
+      "aria-valuetext",
+      `/${s.prefijo}: máscara ${s.mascara}, ${textoHosts(s.hosts)}`
+    );
+    salidaPrefijo.textContent = `/${s.prefijo}`;
+    casilleros.forEach((casillero, i) => {
+      casillero.classList.toggle("casillero-red", i < s.prefijo);
+    });
+    frontera.style.left = `${(s.prefijo / 32) * 100}%`;
+  }
+
   function dibujar(ipOctetos, prefijo) {
     const s = calcularSubred(ipOctetos, prefijo);
     resumenBits.textContent = `Esta subred usa ${s.prefijo} bits de red y ${s.bitsHost} bits de host.`;
     actualizarFilaBinaria(filaIP, "IP", s.ipOctetos, s.prefijo);
     actualizarFilaBinaria(filaMascara, "Máscara", s.mascaraOctetos, s.prefijo);
+    actualizarDeslizador(s);
     tarjetas.replaceChildren(
       ...armarTarjetas(s).map(({ titulo, valor, explicacion }) => {
         const tarjeta = crearElemento("div", "tarjeta");
@@ -126,8 +161,9 @@ function iniciarCalculadora() {
   function calcular() {
     try {
       const { ipOctetos, prefijo } = interpretarEntrada(entrada.value);
+      ipActual = ipOctetos;
       const s = dibujar(ipOctetos, prefijo);
-      estado.textContent = `Resultado: red ${s.red}, ${s.hosts.toLocaleString("es-AR")} hosts utilizables.`;
+      estado.textContent = `Resultado: red ${s.red}, ${textoHosts(s.hosts)}.`;
       error.hidden = true;
       error.textContent = "";
       entrada.removeAttribute("aria-invalid");
@@ -153,6 +189,13 @@ function iniciarCalculadora() {
       entrada.value = boton.dataset.ejemplo;
       calcular();
     });
+  });
+
+  // Al mover el deslizador se recalcula todo y la entrada refleja el nuevo prefijo
+  deslizador.addEventListener("input", () => {
+    const prefijo = Number(deslizador.value);
+    entrada.value = `${octetosATexto(ipActual)}/${prefijo}`;
+    dibujar(ipActual, prefijo);
   });
 
   calcular(); // muestra el ejemplo inicial
