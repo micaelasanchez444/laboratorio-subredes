@@ -1,0 +1,470 @@
+/* ===== Colores: tema claro por defecto ===== */
+:root {
+  color-scheme: light;
+  --fondo: #f4f5f1;
+  --superficie: #ffffff;
+  --superficie-suave: #eceee8;
+  --texto: #1b2129;
+  --texto-suave: #4e5864;
+  --borde: #8a939e;
+  --borde-suave: #d6d9d2;
+  --acento: #0b5cad;
+  --acento-texto: #ffffff;
+  --red: #0b4f96;
+  --red-fondo: #d9e9fb;
+  --host: #9c3f00;
+  --host-fondo: #ffffff;
+  --error: #a4161a;
+  --error-fondo: #fdeaea;
+}
+
+/* Tema oscuro según el sistema, salvo que la persona haya elegido claro */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --fondo: #11151a;
+    --superficie: #1a2027;
+    --superficie-suave: #242b34;
+    --texto: #eceff2;
+    --texto-suave: #aab3bd;
+    --borde: #78838f;
+    --borde-suave: #343d47;
+    --acento: #7ab8ff;
+    --acento-texto: #08223f;
+    --red: #a9d1ff;
+    --red-fondo: #173a5e;
+    --host: #ffb37a;
+    --host-fondo: #1a2027;
+    --error: #ffb4b4;
+    --error-fondo: #431a1d;
+  }
+}
+
+/* Tema oscuro elegido con el botón */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --fondo: #11151a;
+  --superficie: #1a2027;
+  --superficie-suave: #242b34;
+  --texto: #eceff2;
+  --texto-suave: #aab3bd;
+  --borde: #78838f;
+  --borde-suave: #343d47;
+  --acento: #7ab8ff;
+  --acento-texto: #08223f;
+  --red: #a9d1ff;
+  --red-fondo: #173a5e;
+  --host: #ffb37a;
+  --host-fondo: #1a2027;
+  --error: #ffb4b4;
+  --error-fondo: #431a1d;
+}
+
+/* ===== Base ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 62rem;
+  padding: 1.5rem 1rem 2rem;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+dl,
+dd,
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+code,
+.valor,
+.bit,
+.octeto-decimal,
+input {
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+}
+
+:focus-visible {
+  outline: 3px solid var(--acento);
+  outline-offset: 2px;
+}
+
+/* Visible solo para lectores de pantalla */
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.saltar {
+  position: absolute;
+  left: -100vw;
+  padding: 0.5rem 0.75rem;
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.saltar:focus {
+  left: 1rem;
+  top: 0.5rem;
+}
+
+/* ===== Encabezado ===== */
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.bajada {
+  color: var(--texto-suave);
+}
+
+/* ===== Navegación entre secciones ===== */
+.navegacion {
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--borde-suave);
+}
+
+.navegacion ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.navegacion a {
+  display: block;
+  padding: 0.65rem 0.8rem;
+  border-bottom: 3px solid transparent;
+  color: var(--texto-suave);
+  text-decoration: none;
+}
+
+.navegacion a:hover {
+  color: var(--texto);
+}
+
+.navegacion a[aria-current="page"] {
+  border-bottom-color: var(--acento);
+  color: var(--texto);
+  font-weight: 650;
+}
+
+.titulo-vista {
+  margin-bottom: 0.9rem;
+  font-size: 1.35rem;
+}
+
+.titulo-vista:focus {
+  outline: none;
+}
+
+main:focus {
+  outline: none;
+}
+
+h1 {
+  font-size: clamp(1.6rem, 5vw, 2.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+h2,
+h3 {
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+
+/* ===== Paneles y botones ===== */
+.panel {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde-suave);
+  border-radius: 10px;
+}
+
+button {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--superficie-suave);
+}
+
+button.boton-principal {
+  border-color: var(--acento);
+  background: var(--acento);
+  color: var(--acento-texto);
+  font-weight: 650;
+}
+
+button.boton-principal:hover {
+  filter: brightness(1.1);
+}
+
+/* ===== Formulario ===== */
+label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 650;
+}
+
+.fila-entrada {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+input {
+  flex: 1 1 17rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  background: var(--fondo);
+  color: var(--texto);
+  font-size: 1.1rem;
+}
+
+input[aria-invalid="true"] {
+  border: 2px solid var(--error);
+}
+
+.ayuda {
+  margin-top: 0.5rem;
+  color: var(--texto-suave);
+  font-size: 0.92rem;
+}
+
+.ayuda code {
+  overflow-wrap: anywhere;
+  color: var(--texto);
+}
+
+.error {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 4px solid var(--error);
+  border-radius: 4px;
+  background: var(--error-fondo);
+  color: var(--error);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ejemplos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.7rem;
+  margin-top: 1rem;
+  color: var(--texto-suave);
+  font-size: 0.92rem;
+}
+
+.ejemplos ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ejemplos button {
+  font-size: 0.9rem;
+}
+
+/* ===== Bits: la parte central de la app ===== */
+.titulo-con-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.leyenda {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.95rem;
+}
+
+.leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.leyenda .bit {
+  width: 1.5rem;
+}
+
+.resumen-bits {
+  margin-top: 0.3rem;
+  color: var(--texto-suave);
+}
+
+.fila-binaria {
+  margin-top: 1.1rem;
+}
+
+.fila-binaria h4 {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.octetos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.octeto {
+  padding: 0.5rem;
+  background: var(--superficie-suave);
+  border-radius: 7px;
+}
+
+.octeto-decimal {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.bits {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 2px;
+}
+
+/* Red y host se distinguen por color y también por forma: relleno o punteado */
+.bit {
+  display: block;
+  padding: 0.12rem 0;
+  border-radius: 3px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.bit-red {
+  border: 1px solid var(--red);
+  background: var(--red-fondo);
+  color: var(--red);
+}
+
+.bit-host {
+  border: 1px dashed var(--host);
+  background: var(--host-fondo);
+  color: var(--host);
+}
+
+@media (min-width: 46rem) {
+  .octetos {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ===== Tarjetas de resultados ===== */
+.titulo-seccion {
+  margin-bottom: 0.7rem;
+}
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+.tarjeta {
+  padding: 1rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde-suave);
+  border-radius: 10px;
+}
+
+.tarjeta dt {
+  color: var(--texto-suave);
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.valor {
+  font-size: 1.25rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.explicacion {
+  margin-top: 0.35rem;
+  color: var(--texto-suave);
+  font-size: 0.92rem;
+}
+
+.pie {
+  margin-top: 1.5rem;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}
+
+/* ===== Página de pruebas ===== */
+.prueba-ok::before {
+  content: "OK: ";
+  font-weight: 700;
+}
+
+.prueba-falla {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.prueba-falla::before {
+  content: "FALLA: ";
+  font-weight: 700;
+}
+
+#resumen-pruebas {
+  margin: 1rem 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
