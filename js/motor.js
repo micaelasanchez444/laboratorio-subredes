@@ -461,3 +461,193 @@ function calcularPlano(bloques, prefijoBase) {
   ubicar(redBase, prefijoBase, 0, 0, 1, 1, true);
   return ubicados;
 }
+
+// ----- Modo práctica -----
+
+const TIPOS_EJERCICIO = ["red", "broadcast", "hosts", "misma-red"];
+
+// Entero al azar entre min y max, incluidos. azar devuelve un número en [0, 1), como Math.random.
+function enteroAzar(min, max, azar) {
+  return min + Math.floor(azar() * (max - min + 1));
+}
+
+// Elige una subred de tamaño razonable, con primer octeto de clase A, B o C y sin loopback
+function subredAzar(azar) {
+  const prefijo = enteroAzar(8, 30, azar);
+  let primerOcteto = enteroAzar(1, 223, azar);
+  if (primerOcteto === 127) primerOcteto = 128;
+  const numero = octetosANumero([
+    primerOcteto,
+    enteroAzar(0, 255, azar),
+    enteroAzar(0, 255, azar),
+    enteroAzar(0, 255, azar),
+  ]);
+  const red = (numero & prefijoAMascara(prefijo)) >>> 0;
+  return { prefijo, red, tamano: 2 ** (32 - prefijo) };
+}
+
+// Elige una dirección de host al azar: ni la de red ni la de broadcast
+function hostAzar(red, tamano, azar) {
+  return red + enteroAzar(1, tamano - 2, azar);
+}
+
+function generarEjercicio(tipoPedido, azar = Math.random) {
+  const tipo = tipoPedido === "todos" ? TIPOS_EJERCICIO[enteroAzar(0, 3, azar)] : tipoPedido;
+  const { prefijo, red, tamano } = subredAzar(azar);
+  const ipNumero = hostAzar(red, tamano, azar);
+  const ipOctetos = numeroAOctetos(ipNumero);
+  const ip = octetosATexto(ipOctetos);
+  const subred = calcularSubred(ipOctetos, prefijo);
+  const base = { tipo, ip, ipOctetos, prefijo, mascara: subred.mascara, subred };
+
+  if (tipo === "red") {
+    return { ...base, enunciado: `¿Cuál es la dirección de red de ${ip}/${prefijo}?`, respuesta: subred.red };
+  }
+  if (tipo === "broadcast") {
+    return { ...base, enunciado: `¿Cuál es la dirección de broadcast de ${ip}/${prefijo}?`, respuesta: subred.broadcast };
+  }
+  if (tipo === "hosts") {
+    return {
+      ...base,
+      enunciado: `¿Cuántos hosts utilizables tiene una subred con máscara ${subred.mascara}?`,
+      respuesta: String(subred.hosts),
+    };
+  }
+
+  // ¿Misma red? La otra IP sale de la misma subred o de una vecina, para que sea difícil a simple vista
+  const iguales = azar() < 0.5;
+  let otraNumero;
+  if (iguales) {
+    // Sumar un desplazamiento dentro de los hosts garantiza que sea otra dirección
+    const hosts = tamano - 2;
+    const desplazamiento = ipNumero - red;
+    otraNumero = red + 1 + ((desplazamiento - 1 + enteroAzar(1, hosts - 1, azar)) % hosts);
+  } else {
+    const vecina = red + tamano < 2 ** 32 ? red + tamano : red - tamano;
+    otraNumero = hostAzar(vecina, tamano, azar);
+  }
+  const otraOctetos = numeroAOctetos(otraNumero);
+  const otraIP = octetosATexto(otraOctetos);
+  return {
+    ...base,
+    otraIP,
+    otraOctetos,
+    enunciado: `Con máscara /${prefijo}, ¿${ip} y ${otraIP} están en la misma red?`,
+    respuesta: iguales ? "si" : "no",
+  };
+}
+
+// Explica paso a paso cómo se resuelve. Se muestra siempre, también al acertar.
+function explicarEjercicio(ej) {
+  const { subred, prefijo } = ej;
+  if (ej.tipo === "hosts") {
+    return `La máscara ${subred.mascara} es un /${prefijo}, que deja ${subred.bitsHost} bits de host: 2^${subred.bitsHost} − 2 = ${subred.hosts.toLocaleString("es-AR")}. Se restan la dirección de red y la de broadcast.`;
+  }
+  if (ej.tipo === "misma-red") {
+    const redUna = octetosATexto(calcularRed(ej.ipOctetos, prefijo));
+    const redOtra = octetosATexto(calcularRed(ej.otraOctetos, prefijo));
+    return redUna === redOtra
+      ? `Con /${prefijo}, las dos IP dan la misma red: ${redUna}.`
+      : `Con /${prefijo}, ${ej.ip} está en la red ${redUna} y ${ej.otraIP} está en la red ${redOtra}.`;
+  }
+
+  // Red y broadcast: se resuelven con el salto del primer octeto que no es 255 en la máscara
+  const mascara = subred.mascaraOctetos;
+  const indice = mascara.findIndex((octeto) => octeto !== 255);
+  const salto = 256 - mascara[indice];
+  const valor = ej.ipOctetos[indice];
+  const inicio = Math.floor(valor / salto) * salto;
+  const fin = inicio + salto - 1;
+  const introduccion = `Con /${prefijo}, la máscara es ${subred.mascara}. En el octeto ${indice + 1}, el salto es 256 − ${mascara[indice]} = ${salto}, así que el ${valor} cae en el bloque de ${inicio} a ${fin}.`;
+  const hayOctetosDespues = indice < 3;
+  if (ej.tipo === "red") {
+    const resto = hayOctetosDespues ? " Los octetos siguientes quedan en 0." : "";
+    return `${introduccion}${resto} La red es ${subred.red}.`;
+  }
+  const resto = hayOctetosDespues ? " Los octetos siguientes quedan en 255." : "";
+  return `${introduccion}${resto} El broadcast es ${subred.broadcast}.`;
+}
+
+// Busca qué confusión explica una respuesta incorrecta de red o broadcast
+function diagnosticarDireccion(ej, respuesta, octetos) {
+  const { subred } = ej;
+  const nombreEsperado = ej.tipo === "red" ? "la dirección de red" : "el broadcast";
+  if (respuesta === subred.broadcast) return "Esa es la dirección de broadcast: tiene los bits de host en 1. La de red los tiene en 0.";
+  if (respuesta === subred.red) return "Esa es la dirección de red: tiene los bits de host en 0. El broadcast los tiene en 1.";
+  if (respuesta === ej.ip) return `Esa es la IP original: para sacar ${nombreEsperado} hay que cambiar sus bits de host.`;
+  if (respuesta === subred.primerHost) return `Ese es el primer host, no ${nombreEsperado}.`;
+  if (respuesta === subred.ultimoHost) return `Ese es el último host, no ${nombreEsperado}.`;
+  const correctos = ej.respuesta.split(".").map(Number);
+  const distinto = octetos.findIndex((octeto, i) => octeto !== correctos[i]);
+  return `El octeto ${distinto + 1} no da: pusiste ${octetos[distinto]} y es ${correctos[distinto]}.`;
+}
+
+function diagnosticarHosts(ej, cantidad) {
+  const total = 2 ** ej.subred.bitsHost;
+  if (cantidad === total) return "Ese es el total de direcciones: te faltó restar la de red y la de broadcast.";
+  if (cantidad === total - 1) return "Restaste 1, pero hay que restar 2: la dirección de red y la de broadcast.";
+  return `Con ${ej.subred.bitsHost} bits de host, el cálculo es 2^${ej.subred.bitsHost} − 2.`;
+}
+
+// Corrige una respuesta. valida es false si no se entiende: en ese caso no cuenta como intento.
+function corregirEjercicio(ej, respuestaTexto) {
+  const texto = respuestaTexto.trim();
+  const explicacion = explicarEjercicio(ej);
+
+  if (ej.tipo === "misma-red") {
+    const correcta = texto === ej.respuesta;
+    return {
+      valida: true,
+      correcta,
+      diagnostico: correcta ? "" : `La respuesta es "${ej.respuesta === "si" ? "sí" : "no"}".`,
+      explicacion,
+    };
+  }
+
+  if (texto === "") {
+    return { valida: false, mensaje: "Escribí una respuesta antes de corregir." };
+  }
+
+  if (ej.tipo === "hosts") {
+    // Acepta "1.022" como separador de miles
+    const limpio = /^\d{1,3}(\.\d{3})+$/.test(texto) ? texto.replaceAll(".", "") : texto;
+    if (!/^\d+$/.test(limpio)) {
+      return { valida: false, mensaje: "Respondé con un número entero, como 62." };
+    }
+    const cantidad = Number(limpio);
+    const correcta = cantidad === ej.subred.hosts;
+    return { valida: true, correcta, diagnostico: correcta ? "" : diagnosticarHosts(ej, cantidad), explicacion };
+  }
+
+  // También acepta la dirección con su prefijo, como 192.168.1.128/26
+  const direccion = texto.replace(/\/\d+$/, "");
+  let octetos;
+  try {
+    octetos = textoAOctetos(direccion, "La respuesta");
+  } catch (problema) {
+    if (!(problema instanceof ErrorEntrada)) throw problema;
+    return { valida: false, mensaje: problema.message };
+  }
+  const respuesta = octetosATexto(octetos);
+  const correcta = respuesta === ej.respuesta;
+  return {
+    valida: true,
+    correcta,
+    diagnostico: correcta ? "" : diagnosticarDireccion(ej, respuesta, octetos),
+    explicacion,
+  };
+}
+
+function puntajeInicial() {
+  return { aciertos: 0, intentos: 0, racha: 0, mejorRacha: 0 };
+}
+
+function actualizarPuntaje(puntaje, correcta) {
+  const racha = correcta ? puntaje.racha + 1 : 0;
+  return {
+    aciertos: puntaje.aciertos + (correcta ? 1 : 0),
+    intentos: puntaje.intentos + 1,
+    racha,
+    mejorRacha: Math.max(puntaje.mejorRacha, racha),
+  };
+}

@@ -51,6 +51,10 @@ Elegí una red y dividila de una de estas formas:
 
 Cada bloque tiene un área proporcional a sus direcciones. Pasá el mouse para ver su rango, o tocalo para elegirlo y ponerle un nombre. Los bloques se calculan reservando la dirección de red y la de broadcast, así que los pedidos de hosts usan como mínimo un /30.
 
+## Práctica
+
+Ejercicios al azar sobre dirección de red, broadcast, cantidad de hosts y si dos IP están en la misma red. Cada respuesta se corrige en el momento, con el motivo del error y la resolución paso a paso. El puntaje y la racha se guardan solo en tu navegador.
+
 ## Archivos
 
 | Archivo | Para qué sirve |
@@ -62,6 +66,7 @@ Cada bloque tiene un área proporcional a sus direcciones. Pasá el mouse para v
 | `js/calculadora.js` | La pantalla de la calculadora |
 | `js/paquete.js` | La simulación de ¿Llega el paquete? |
 | `js/mapa.js` | El plano de subredes |
+| `js/practica.js` | El modo práctica |
 | `js/app.js` | La navegación y el arranque de la app |
 | `pruebas.html` y `pruebas.js` | Las pruebas de los cálculos |
 

@@ -1273,6 +1273,87 @@ button.boton-fila {
   margin-top: 0.4rem;
 }
 
+/* ===== Modo práctica ===== */
+.practica-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.9rem 1.5rem;
+}
+
+select {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit;
+}
+
+.marcador {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.marcador dt {
+  color: var(--texto-suave);
+  font-size: 0.88rem;
+}
+
+.marcador dd {
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.racha-sube {
+  animation: subir-racha 0.35s ease;
+}
+
+@keyframes subir-racha {
+  50% {
+    color: var(--acento);
+    transform: scale(1.25);
+  }
+}
+
+.marcador dd {
+  display: inline-block;
+}
+
+.enunciado {
+  margin-bottom: 0.8rem;
+  font-size: 1.2rem;
+  overflow-wrap: anywhere;
+}
+
+.opciones-respuesta {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.opciones-respuesta button {
+  min-width: 5rem;
+}
+
+#prac-devolucion {
+  margin-top: 0.9rem;
+}
+
+#prac-diagnostico:empty {
+  display: none;
+}
+
+#prac-diagnostico {
+  font-weight: 600;
+}
+
+#prac-explicacion {
+  margin-top: 0.3rem;
+}
+
 /* ===== Reducir movimiento: los cambios se ven al instante ===== */
 @media (prefers-reduced-motion: reduce) {
   *,

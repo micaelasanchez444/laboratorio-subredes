@@ -14,6 +14,7 @@
   <script src="js/calculadora.js"></script>
   <script src="js/paquete.js"></script>
   <script src="js/mapa.js"></script>
+  <script src="js/practica.js"></script>
   <script src="js/app.js"></script>
 </head>
 <body>
@@ -32,6 +33,7 @@
       <li><a href="#calculadora">Calculadora</a></li>
       <li><a href="#paquete">¿Llega el paquete?</a></li>
       <li><a href="#mapa">Mapa de subredes</a></li>
+      <li><a href="#practica">Práctica</a></li>
     </ul>
   </nav>
 
@@ -218,6 +220,55 @@
           </ul>
           <p class="nota-mascaras">Dividir no alcanza por sí solo: si el router deja pasar todo, las subredes siguen comunicadas. Hacen falta reglas entre ellas.</p>
         </section>
+      </div>
+    </section>
+
+    <!-- ===== Modo práctica ===== -->
+    <section id="practica" class="vista" aria-labelledby="titulo-practica" hidden>
+      <h2 id="titulo-practica" class="titulo-vista" tabindex="-1">Práctica</h2>
+
+      <div class="panel">
+        <div class="practica-barra">
+          <div class="campo practica-tipo">
+            <label for="prac-tipo">Tipo de ejercicio</label>
+            <select id="prac-tipo">
+              <option value="todos">Todos, al azar</option>
+              <option value="red">Dirección de red</option>
+              <option value="broadcast">Broadcast</option>
+              <option value="hosts">Cantidad de hosts</option>
+              <option value="misma-red">¿Misma red?</option>
+            </select>
+          </div>
+          <dl class="marcador">
+            <div><dt>Puntaje</dt><dd id="prac-puntaje"></dd></div>
+            <div><dt>Racha</dt><dd id="prac-racha"></dd></div>
+            <div><dt>Mejor racha</dt><dd id="prac-mejor"></dd></div>
+          </dl>
+          <button id="prac-reiniciar" type="button">Reiniciar puntaje</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 id="prac-enunciado" class="enunciado"></h3>
+        <form id="prac-formulario" novalidate>
+          <div id="prac-entrada-texto" class="fila-entrada">
+            <input id="prac-respuesta" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-labelledby="prac-enunciado" aria-describedby="prac-mensaje">
+            <button id="prac-corregir" class="boton-principal" type="submit">Corregir</button>
+          </div>
+          <div id="prac-entrada-opciones" class="opciones-respuesta">
+            <button type="button" data-respuesta="si">Sí</button>
+            <button type="button" data-respuesta="no">No</button>
+          </div>
+        </form>
+        <p id="prac-mensaje" class="error" role="alert" hidden></p>
+
+        <div id="prac-devolucion" class="veredicto" role="status" hidden>
+          <h4 id="prac-resultado"></h4>
+          <p id="prac-diagnostico"></p>
+          <p id="prac-explicacion"></p>
+        </div>
+
+        <button id="prac-otro" class="boton-principal espacio-arriba" type="button" hidden>Otro ejercicio</button>
       </div>
     </section>
   </main>

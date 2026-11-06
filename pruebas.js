@@ -267,6 +267,111 @@ for (const [nombre, bloques, prefijo] of casosPlano) {
   });
 }
 
+// ----- Modo práctica -----
+// Generador con semilla: el azar es siempre el mismo, así las pruebas no fallan de a ratos
+function azarConSemilla(semilla) {
+  let estado = semilla;
+  return () => {
+    estado = (estado * 1664525 + 1013904223) % 4294967296;
+    return estado / 4294967296;
+  };
+}
+
+for (const tipo of TIPOS_EJERCICIO) {
+  probar(`500 ejercicios de ${tipo} son válidos y su respuesta se acepta`, () => {
+    const azar = azarConSemilla(12345);
+    for (let i = 0; i < 500; i++) {
+      const ej = generarEjercicio(tipo, azar);
+      esperarIgual(ej.tipo, tipo);
+      esperarIgual(direccionReservada(ej.ipOctetos, ej.prefijo), null);
+      esperarIgual(ej.ipOctetos[0] !== 127, true);
+      esperarIgual(ej.prefijo >= 8 && ej.prefijo <= 30, true);
+      const correccion = corregirEjercicio(ej, ej.respuesta);
+      esperarIgual(correccion.valida, true);
+      esperarIgual(correccion.correcta, true);
+      esperarIgual(correccion.explicacion.includes("undefined"), false);
+    }
+  });
+}
+
+probar("¿misma red?: la respuesta coincide con el cálculo y aparecen ambos casos", () => {
+  const azar = azarConSemilla(777);
+  const vistas = new Set();
+  for (let i = 0; i < 500; i++) {
+    const ej = generarEjercicio("misma-red", azar);
+    esperarIgual(ej.ip !== ej.otraIP, true);
+    esperarIgual(direccionReservada(ej.otraOctetos, ej.prefijo), null);
+    const calculada = mismaRed(ej.ipOctetos, ej.otraOctetos, ej.prefijo) ? "si" : "no";
+    esperarIgual(ej.respuesta, calculada);
+    vistas.add(ej.respuesta);
+  }
+  esperarIgual(vistas.size, 2);
+});
+
+probar("los tipos de ejercicio salen todos al azar", () => {
+  const azar = azarConSemilla(99);
+  const vistos = new Set();
+  for (let i = 0; i < 200; i++) vistos.add(generarEjercicio("todos", azar).tipo);
+  esperarIgual(vistos.size, 4);
+});
+
+// Un ejercicio fijo: 192.168.1.130/26 (red .128, broadcast .191)
+function ejercicioFijo(tipo) {
+  const ipOctetos = [192, 168, 1, 130];
+  const subred = calcularSubred(ipOctetos, 26);
+  const respuestas = { red: subred.red, broadcast: subred.broadcast, hosts: String(subred.hosts) };
+  return { tipo, ip: subred.ip, ipOctetos, prefijo: 26, mascara: subred.mascara, subred, respuesta: respuestas[tipo] };
+}
+
+const casosDiagnostico = [
+  ["red", "192.168.1.191", "Esa es la dirección de broadcast"],
+  ["red", "192.168.1.130", "IP original"],
+  ["red", "192.168.1.129", "primer host"],
+  ["red", "192.168.1.64", "El octeto 4 no da: pusiste 64 y es 128"],
+  ["red", "192.168.2.128", "El octeto 3 no da"],
+  ["broadcast", "192.168.1.128", "Esa es la dirección de red"],
+  ["broadcast", "192.168.1.190", "último host"],
+  ["hosts", "64", "te faltó restar"],
+  ["hosts", "63", "Restaste 1"],
+  ["hosts", "30", "2^6"],
+];
+for (const [tipo, respuesta, texto] of casosDiagnostico) {
+  probar(`diagnóstico de ${tipo} con "${respuesta}"`, () => {
+    const correccion = corregirEjercicio(ejercicioFijo(tipo), respuesta);
+    esperarIgual(correccion.correcta, false);
+    esperarIgual(correccion.diagnostico.includes(texto), true);
+  });
+}
+
+probar("explicación con el salto", () => {
+  const texto = explicarEjercicio(ejercicioFijo("red"));
+  esperarIgual(texto.includes("256 − 192 = 64"), true);
+  esperarIgual(texto.includes("de 128 a 191"), true);
+});
+probar("acepta la red con prefijo", () => {
+  esperarIgual(corregirEjercicio(ejercicioFijo("red"), "192.168.1.128/26").correcta, true);
+});
+probar("acepta miles con punto", () => {
+  const ipOctetos = [10, 0, 0, 1];
+  const subred = calcularSubred(ipOctetos, 22);
+  const ej = { tipo: "hosts", ip: subred.ip, ipOctetos, prefijo: 22, mascara: subred.mascara, subred, respuesta: "1022" };
+  esperarIgual(corregirEjercicio(ej, "1.022").correcta, true);
+});
+for (const [tipo, respuesta] of [["red", ""], ["red", "hola"], ["red", "300.1.1.1"], ["hosts", "muchos"], ["hosts", ""]]) {
+  probar(`una respuesta ilegible no cuenta como intento (${tipo}: "${respuesta}")`, () => {
+    esperarIgual(corregirEjercicio(ejercicioFijo(tipo), respuesta).valida, false);
+  });
+}
+
+probar("puntaje y racha", () => {
+  let puntaje = puntajeInicial();
+  for (const correcta of [true, true, false, true]) puntaje = actualizarPuntaje(puntaje, correcta);
+  esperarIgual(puntaje.aciertos, 3);
+  esperarIgual(puntaje.intentos, 4);
+  esperarIgual(puntaje.racha, 1);
+  esperarIgual(puntaje.mejorRacha, 2);
+});
+
 // ----- Mostrar el resumen -----
 const fallas = resultadosPruebas.filter((resultado) => !resultado.ok);
 const resumen = `${resultadosPruebas.length - fallas.length} de ${resultadosPruebas.length} pruebas correctas`;
