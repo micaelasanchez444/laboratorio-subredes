@@ -6,7 +6,7 @@ Todo se calcula en el navegador: no envía datos, no usa rastreadores ni carga r
 
 ## Cómo usarlo
 
-Abrí `index.html` en cualquier navegador. No hace falta instalar nada.
+Abrilo en https://micaelasanchez444.github.io/laboratorio-subredes/ o abrí `index.html` en cualquier navegador. No hace falta instalar nada.
 
 ## Calculadora
 
